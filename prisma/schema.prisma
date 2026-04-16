@@ -1,0 +1,454 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuarios {
+  id             String   @id @default(uuid())
+  nombre         String?
+  correo         String   @unique
+  contra         String
+  rol            String   @default("admin")
+  activo         Boolean  @default(true)
+  refresh_token  String?
+  refresh_exp    DateTime?
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  @@map("Usuarios")
+}
+
+model Escuela {
+  id             String   @id @default(uuid())
+  nombre         String?
+  clave          String   @unique
+  zona_escolar   String?
+  nivel          String?
+  num_tel        String?
+  correo         String?
+  domicilio      String?
+  localidad      String?
+  municipio      String?
+  estado         String?
+  codigo_postal  String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  ciclos         Ciclo[]
+  turnos         Turnos[]
+  grupos         Grupos[]
+  empleados      Empleado[]
+  plazas         Plaza[]
+
+  @@map("Escuela")
+}
+
+model Ciclo {
+  id             String   @id @default(uuid())
+  id_plan        String
+  id_esc         String
+  nombre         String?
+  f_inicio       DateTime?
+  f_fin          DateTime?
+  activo         Boolean  @default(false)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  plan_estudios  Plan_estudios @relation(fields: [id_plan], references: [id], onDelete: Cascade)
+  escuela        Escuela @relation(fields: [id_esc], references: [id], onDelete: Cascade)
+  estadisticas   Estadistica_Alumnos[]
+  padrones       Padron[]
+
+  @@index([id_plan])
+  @@index([id_esc])
+  @@map("Ciclo")
+}
+
+model Turnos {
+  id             String   @id @default(uuid())
+  id_esc         String
+  nombre         String?
+  desc           String?
+  h_inicio       DateTime?
+  h_fin          DateTime?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  escuela        Escuela @relation(fields: [id_esc], references: [id], onDelete: Cascade)
+  grupos         Grupos[]
+
+  @@index([id_esc])
+  @@map("Turnos")
+}
+
+model Plan_estudios {
+  id             String   @id @default(uuid())
+  nombre         String?
+  desc           String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  ciclos         Ciclo[]
+  grados         Grados[]
+  materias       Materias[]
+
+  @@map("Plan_estudios")
+}
+
+model Grados {
+  id             String   @id @default(uuid())
+  id_plan        String
+  nombre         String?
+  numero         Int?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  plan_estudios  Plan_estudios @relation(fields: [id_plan], references: [id], onDelete: Cascade)
+  grupos         Grupos[]
+  materia_grado  Materia_Grado[]
+
+  @@index([id_plan])
+  @@map("Grados")
+}
+
+model Materias {
+  id             String   @id @default(uuid())
+  id_plan        String
+  nombre         String?
+  desc           String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  plan_estudios  Plan_estudios @relation(fields: [id_plan], references: [id], onDelete: Cascade)
+  materia_grado  Materia_Grado[]
+  plazas         Plaza[]
+  horarios       Horario_Slot[]
+
+  @@index([id_plan])
+  @@map("Materias")
+}
+
+model Materia_Grado {
+  id             String   @id @default(uuid())
+  id_materia     String
+  id_grado       String
+  horas_sem      Int?
+
+  materia        Materias @relation(fields: [id_materia], references: [id], onDelete: Cascade)
+  grado          Grados @relation(fields: [id_grado], references: [id], onDelete: Cascade)
+
+  @@unique([id_materia, id_grado], map: "Materia_Grado_index_0")
+  @@map("Materia_Grado")
+}
+
+model Grupos {
+  id             String   @id @default(uuid())
+  id_esc         String
+  id_grado       String
+  id_turno       String
+  nombre         String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  escuela        Escuela @relation(fields: [id_esc], references: [id], onDelete: Cascade)
+  grado          Grados @relation(fields: [id_grado], references: [id], onDelete: Cascade)
+  turno          Turnos @relation(fields: [id_turno], references: [id], onDelete: Cascade)
+  plaza_grupos   Plaza_Grupo[]
+  horarios       Horario_Slot[]
+  estadisticas   Estadistica_Alumnos[]
+
+  @@index([id_esc])
+  @@index([id_grado])
+  @@index([id_turno])
+  @@map("Grupos")
+}
+
+model Persona {
+  id             String   @id @default(uuid())
+  nombre         String?
+  app_p          String?
+  app_m          String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  direcciones    Persona_direc[]
+  contactos      Persona_contact[]
+  empleados      Empleado[]
+
+  @@map("Persona")
+}
+
+model Persona_direc {
+  id             String   @id @default(uuid())
+  id_persona     String
+  calle1         String?
+  calle2         String?
+  refer          String?
+  colonia        String?
+  cod_post       String?
+  ciudad         String?
+  estado         String?
+  pais           String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  persona        Persona @relation(fields: [id_persona], references: [id], onDelete: Cascade)
+
+  @@index([id_persona])
+  @@map("Persona_direc")
+}
+
+model Persona_contact {
+  id             String   @id @default(uuid())
+  id_persona     String
+  num_tel1       String?
+  num_tel2       String?
+  correo         String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  persona        Persona @relation(fields: [id_persona], references: [id], onDelete: Cascade)
+
+  @@index([id_persona])
+  @@map("Persona_contact")
+}
+
+model Empleado {
+  id             String   @id @default(uuid())
+  id_persona     String
+  id_esc         String
+  num_control    String?
+  rfc            String   @unique
+  curp           String   @unique
+  lugar_nac      String?
+  estado_civil   String?
+  f_ingreso      DateTime?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  persona        Persona @relation(fields: [id_persona], references: [id], onDelete: Cascade)
+  escuela        Escuela @relation(fields: [id_esc], references: [id], onDelete: Cascade)
+
+  coberturas_titular Cobertura[] @relation("EmpleadoTitular")
+  coberturas_cubre Cobertura[] @relation("EmpleadoCubre")
+  empleado_roles Empleado_Rol[]
+  preparacion    Preparacion_Prof?
+  plazas         Plaza[]
+  trabajos_externos Trabajo_Externo[]
+  horarios       Horario_Slot[]
+
+  @@index([id_persona])
+  @@index([id_esc])
+  @@map("Empleado")
+}
+
+model Cobertura {
+  id             String   @id @default(uuid())
+  id_empleado_titular String
+  id_empleado_cubre String
+  num_control_temp String?
+  f_inicio       DateTime?
+  f_fin          DateTime?
+  motivo         String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado_titular Empleado @relation("EmpleadoTitular", fields: [id_empleado_titular], references: [id], onDelete: Cascade)
+  empleado_cubre Empleado @relation("EmpleadoCubre", fields: [id_empleado_cubre], references: [id], onDelete: Cascade)
+
+  @@index([id_empleado_cubre, activo], map: "Cobertura_index_1")
+  @@map("Cobertura")
+}
+
+model Rol_Empleado {
+  id             String   @id @default(uuid())
+  nombre         String?
+  desc           String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado_roles Empleado_Rol[]
+
+  @@map("Rol_Empleado")
+}
+
+model Empleado_Rol {
+  id             String   @id @default(uuid())
+  id_empleado    String
+  id_rol         String
+  f_inicio       DateTime?
+  f_fin          DateTime?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado       Empleado @relation(fields: [id_empleado], references: [id], onDelete: Cascade)
+  rol            Rol_Empleado @relation(fields: [id_rol], references: [id], onDelete: Cascade)
+
+  @@unique([id_empleado, id_rol, f_inicio], map: "Empleado_Rol_index_2")
+  @@map("Empleado_Rol")
+}
+
+model Preparacion_Prof {
+  id             String   @id @default(uuid())
+  id_empleado    String   @unique
+  estudios_prof  String?
+  escuela_realiz String?
+  tipo_estudio   String?
+  ultimo_grado   String?
+  institucion    String?
+  especialidades String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado       Empleado @relation(fields: [id_empleado], references: [id], onDelete: Cascade)
+
+  @@map("Preparacion_Prof")
+}
+
+model Nombramiento {
+  id             String   @id @default(uuid())
+  nombre         String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  plazas         Plaza[]
+
+  @@map("Nombramiento")
+}
+
+model Plaza {
+  id             String   @id @default(uuid())
+  id_empleado    String
+  id_nombramiento String
+  id_materia     String
+  id_esc         String
+  codigo_plaza   String?
+  horas_clase    Int?
+  horas_descarga Int?
+  horas_fortalec Int?
+  func_descarga  String?
+  evaluado       String?
+  observaciones  String?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado       Empleado @relation(fields: [id_empleado], references: [id], onDelete: Cascade)
+  nombramiento   Nombramiento @relation(fields: [id_nombramiento], references: [id], onDelete: Cascade)
+  materia        Materias @relation(fields: [id_materia], references: [id], onDelete: Cascade)
+  escuela        Escuela @relation(fields: [id_esc], references: [id], onDelete: Cascade)
+  plaza_grupos   Plaza_Grupo[]
+
+  @@index([id_empleado])
+  @@index([id_nombramiento])
+  @@index([id_materia])
+  @@index([id_esc])
+  @@map("Plaza")
+}
+
+model Plaza_Grupo {
+  id             String   @id @default(uuid())
+  id_plaza       String
+  id_grupo       String
+
+  plaza          Plaza @relation(fields: [id_plaza], references: [id], onDelete: Cascade)
+  grupo          Grupos @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
+
+  @@unique([id_plaza, id_grupo], map: "Plaza_Grupo_index_3")
+  @@map("Plaza_Grupo")
+}
+
+model Trabajo_Externo {
+  id             String   @id @default(uuid())
+  id_empleado    String
+  institucion    String?
+  horas          Int?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado       Empleado @relation(fields: [id_empleado], references: [id], onDelete: Cascade)
+
+  @@index([id_empleado])
+  @@map("Trabajo_Externo")
+}
+
+model Horario_Slot {
+  id             String   @id @default(uuid())
+  id_empleado    String
+  id_grupo       String
+  id_materia     String
+  dia_semana     String?
+  h_inicio       DateTime?
+  h_fin          DateTime?
+  activo         Boolean  @default(true)
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  empleado       Empleado @relation(fields: [id_empleado], references: [id], onDelete: Cascade)
+  grupo          Grupos @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
+  materia        Materias @relation(fields: [id_materia], references: [id], onDelete: Cascade)
+
+  @@index([id_empleado])
+  @@index([id_grupo])
+  @@index([id_materia])
+  @@map("Horario_Slot")
+}
+
+model Estadistica_Alumnos {
+  id             String   @id @default(uuid())
+  id_ciclo       String
+  id_grupo       String
+  insc_h         Int      @default(0)
+  insc_m         Int      @default(0)
+  altas_h        Int      @default(0)
+  altas_m        Int      @default(0)
+  bajas_h        Int      @default(0)
+  bajas_m        Int      @default(0)
+  aprob_todos_h  Int?
+  aprob_todos_m  Int?
+  reprob_h       Int?
+  reprob_m       Int?
+  repetidores_h  Int?
+  repetidores_m  Int?
+  f_cre          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  ciclo          Ciclo @relation(fields: [id_ciclo], references: [id], onDelete: Cascade)
+  grupo          Grupos @relation(fields: [id_grupo], references: [id], onDelete: Cascade)
+
+  @@unique([id_ciclo, id_grupo], map: "Estadistica_Alumnos_index_4")
+  @@map("Estadistica_Alumnos")
+}
+
+model Padron {
+  id             String   @id @default(uuid())
+  id_ciclo       String
+  status         String   @default("borrador")
+  f_gen          DateTime @default(now())
+  f_mod          DateTime @updatedAt
+
+  ciclo          Ciclo @relation(fields: [id_ciclo], references: [id], onDelete: Cascade)
+
+  @@index([id_ciclo])
+  @@map("Padron")
+}
