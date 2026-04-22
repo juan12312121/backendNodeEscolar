@@ -41,6 +41,9 @@ const hpp = require('hpp');
 const { apiLimiter, loginLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
+const requestLogger = require('./middleware/requestLogger');
+
+app.use(requestLogger);
 
 app.use(helmet());
 app.use(cors());

@@ -36,7 +36,7 @@ class CRUDService {
     const { 
       page = 1,           // Página actual (default 1)
       limit = 10,         // Registros por página (default 10)
-      sort = 'createdAt', // Campo por el cual ordenar
+      sort = this.Model.rawAttributes.f_cre ? 'f_cre' : 'id', // Dinámico según el modelo
       order = 'DESC',     // Dirección (ASC o DESC)
       ...filters          // Todo lo demás son filtros (ej: municipio=Puebla)
     } = query;

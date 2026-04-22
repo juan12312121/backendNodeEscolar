@@ -33,7 +33,15 @@ const login = errorHandler(async (req, res) => {
   
   const token = generateToken(usuario);
   
-  sendSuccess(res, { token }, 'Login exitoso');
+  // No enviar la contraseña al cliente
+  const user = {
+    id_usuario: usuario.id,
+    nombre: usuario.nombre,
+    correo: usuario.correo,
+    id_rol: usuario.id_rol
+  };
+
+  sendSuccess(res, { token, user }, 'Login exitoso');
 });
 
 const register = errorHandler(async (req, res) => {

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría - SchoolManager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+
+        /* Sidebar (Synced) */
+        .sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem 0; position: fixed; left: 0; top: 0; width: 280px; height: 100vh; overflow-y: auto; box-shadow: var(--shadow-sm); z-index: 100; }
+        .sidebar-header { padding: 0 1.5rem 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 18px; }
+        .sidebar-brand { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
+        .sidebar-brand small { display: block; font-size: 0.7rem; color: var(--text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .sidebar-nav { padding: 0 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-section { padding: 0 0.75rem; margin-bottom: 2rem; }
+        .nav-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 1px; padding: 0.75rem 0; margin-bottom: 0.5rem; }
+        .nav-item { padding: 0.75rem 1rem; border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; border: 1px solid transparent; }
+        .nav-item:hover { background: var(--bg); color: var(--accent); }
+        .nav-item.active { background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .nav-item svg { width: 18px; height: 18px; stroke-width: 2; }
+
+        .dashboard-content { flex: 1; margin-left: 280px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .main-content { padding: 2rem; }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .page-title h2 { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem; }
+        .page-title p { color: var(--text-secondary); font-weight: 500; }
+
+        /* Audit Table Card */
+        .content-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); overflow: hidden; }
+        .table-toolbar { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        
+        .filters { display: flex; gap: 0.75rem; }
+        .filter-select { padding: 0.6rem 1rem; border-radius: 10px; border: 1px solid var(--border); font-family: inherit; font-size: 0.85rem; font-weight: 500; }
+
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; padding: 1rem 1.5rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--text-tertiary); font-weight: 700; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+        td { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        tr:hover { background: #fcfdfe; }
+
+        .log-user { font-weight: 600; color: var(--text-primary); }
+        .log-action { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
+        .action-create { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .action-update { background: rgba(37, 99, 235, 0.1); color: var(--accent); }
+        .action-delete { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+        .action-login { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+
+        .log-entity { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: var(--text-secondary); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+        .log-date { color: var(--text-secondary); font-size: 0.85rem; }
+        .log-ip { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--text-tertiary); }
+
+        .details-cell { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">SM</div>
+            <div class="sidebar-brand">SchoolManager<small>Super Admin</small></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="dashboard.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 11l4-4m0 0l4 4m-4-4v4m0-11l-4 4m0 0L3 7"></path></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Infraestructura</div>
+                <a href="escuelas.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path></svg>
+                    Escuelas
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Accesos</div>
+                <a href="usuarios.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM16 16H8v4h8v-4z"></path></svg>
+                    Usuarios
+                </a>
+                <a href="roles.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 2.944V2.056m0 0a11.955 11.955 0 00-8.618 3.04M12 2.944a11.955 11.955 0 008.618 3.04M12 2.944v21.112M12 24.056c-5.891 0-10.618-4.727-10.618-10.618"></path></svg>
+                    Roles y Permisos
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Seguridad</div>
+                <a href="auditoria.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Auditoría
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="dashboard-content">
+        <header class="header">
+            <div class="header-left"><div class="header-title"><h1>Auditoría de Actividad</h1></div></div>
+            <div class="profile-menu">
+                <div class="profile-avatar">AD</div>
+                <div class="profile-info"><p>Admin User</p><span>Super Admin</span></div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Logs del Sistema</h2>
+                    <p>Monitoreo en tiempo real de todas las acciones realizadas</p>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="table-toolbar">
+                    <div class="filters">
+                        <select class="filter-select"><option>Acción: Todas</option><option>CREATE</option><option>UPDATE</option><option>DELETE</option><option>LOGIN</option></select>
+                        <select class="filter-select"><option>Entidad: Todas</option><option>Escuela</option><option>Usuario</option><option>Empleado</option></select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Acción</th>
+                                <th>Entidad</th>
+                                <th>Detalles</th>
+                                <th>Fecha</th>
+                                <th>IP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="log-user">admin.general</span></td>
+                                <td><span class="log-action action-create">CREATE</span></td>
+                                <td><span class="log-entity">Escuela</span></td>
+                                <td class="details-cell">Nueva escuela: Benito Juárez (25DPR001Z)</td>
+                                <td><span class="log-date">21/04/2026 20:23</span></td>
+                                <td><span class="log-ip">192.168.1.45</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="log-user">director.sec1</span></td>
+                                <td><span class="log-action action-login">LOGIN</span></td>
+                                <td><span class="log-entity">Sesion</span></td>
+                                <td class="details-cell">Inicio de sesión exitoso</td>
+                                <td><span class="log-date">21/04/2026 20:15</span></td>
+                                <td><span class="log-ip">187.145.22.10</span></td>
+                            </tr>
+                            <tr>
+                                <td><span class="log-user">rh.estatal</span></td>
+                                <td><span class="log-action action-update">UPDATE</span></td>
+                                <td><span class="log-entity">Empleado</span></td>
+                                <td class="details-cell">Actualización de plaza: GAHM850412</td>
+                                <td><span class="log-date">21/04/2026 19:40</span></td>
+                                <td><span class="log-ip">201.12.5.89</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        const tableBody = document.querySelector('tbody');
+        const token = localStorage.getItem('token');
+
+        // Redirigir si no hay token
+        if (!token) window.location.href = 'login.html';
+
+        async function loadAuditLogs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auditoria`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const result = await response.json();
+                if (!result.success) return;
+
+                const logs = result.data;
+                tableBody.innerHTML = '';
+
+                logs.forEach(log => {
+                    const date = new Date(log.fecha).toLocaleString();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="log-user">${log.usuario || 'Sistema'}</span></td>
+                        <td><span class="log-action action-${log.accion.toLowerCase()}">${log.accion}</span></td>
+                        <td><span class="log-entity">${log.entidad}</span></td>
+                        <td class="details-cell" title="${log.detalles}">${log.detalles}</td>
+                        <td><span class="log-date">${date}</span></td>
+                        <td><span class="log-ip">${log.ip || 'N/A'}</span></td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error al cargar logs:', error);
+            }
+        }
+
+        loadAuditLogs();
+    </script>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles y Permisos - SchoolManager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --accent-dark: #1e40af;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text-primary); display: flex; min-height: 100vh; }
+
+        /* Sidebar (Synced) */
+        .sidebar { background: var(--white); border-right: 1px solid var(--border); padding: 1.5rem 0; position: fixed; left: 0; top: 0; width: 280px; height: 100vh; overflow-y: auto; box-shadow: var(--shadow-sm); z-index: 100; }
+        .sidebar-header { padding: 0 1.5rem 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-logo { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; font-size: 18px; }
+        .sidebar-brand { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
+        .sidebar-brand small { display: block; font-size: 0.7rem; color: var(--text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .sidebar-nav { padding: 0 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-section { padding: 0 0.75rem; margin-bottom: 2rem; }
+        .nav-section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: 1px; padding: 0.75rem 0; margin-bottom: 0.5rem; }
+        .nav-item { padding: 0.75rem 1rem; border-radius: 10px; text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 0.75rem; transition: all 0.2s; border: 1px solid transparent; }
+        .nav-item:hover { background: var(--bg); color: var(--accent); }
+        .nav-item.active { background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+        .nav-item svg { width: 18px; height: 18px; stroke-width: 2; }
+
+        .dashboard-content { flex: 1; margin-left: 280px; display: flex; flex-direction: column; min-height: 100vh; }
+        .header { background: var(--white); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header-title h1 { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+        .main-content { padding: 2rem; }
+
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; }
+        .page-title h2 { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem; }
+        .page-title p { color: var(--text-secondary); font-weight: 500; }
+
+        /* Roles Grid */
+        .roles-grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; }
+
+        /* Roles List Card */
+        .roles-list-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); height: fit-content; }
+        .role-option { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; }
+        .role-option:last-child { border-bottom: none; }
+        .role-option:hover { background: #f8fafc; }
+        .role-option.active { background: rgba(37, 99, 235, 0.05); border-left: 4px solid var(--accent); padding-left: calc(1.5rem - 4px); }
+        .role-name { font-weight: 600; color: var(--text-primary); display: block; }
+        .role-count { font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; }
+
+        /* Permissions Card */
+        .permissions-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-sm); padding: 2rem; }
+        .permissions-header { margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .permissions-header h3 { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); }
+
+        .permission-group { margin-bottom: 2.5rem; }
+        .permission-group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; }
+        .permission-group-title svg { width: 16px; color: var(--accent); }
+
+        .permission-items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        
+        .permission-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; transition: all 0.2s; cursor: pointer; }
+        .permission-item:hover { border-color: var(--accent); background: #fcfdfe; }
+        
+        .checkbox-custom { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; margin-top: 2px; }
+        .permission-item.selected .checkbox-custom { background: var(--accent); border-color: var(--accent); }
+        .checkbox-custom svg { width: 12px; color: white; display: none; }
+        .permission-item.selected .checkbox-custom svg { display: block; }
+
+        .permission-info { display: flex; flex-direction: column; gap: 0.25rem; }
+        .p-name { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); }
+        .p-desc { font-size: 0.8rem; color: var(--text-tertiary); line-height: 1.4; }
+
+        .btn-save { padding: 0.75rem 2rem; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-save:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">SM</div>
+            <div class="sidebar-brand">SchoolManager<small>Super Admin</small></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <a href="dashboard.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 11l4-4m0 0l4 4m-4-4v4m0-11l-4 4m0 0L3 7"></path></svg>
+                    Dashboard
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Infraestructura</div>
+                <a href="escuelas.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path></svg>
+                    Escuelas
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Accesos</div>
+                <a href="usuarios.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM16 16H8v4h8v-4z"></path></svg>
+                    Usuarios
+                </a>
+                <a href="roles.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 2.944V2.056m0 0a11.955 11.955 0 00-8.618 3.04M12 2.944a11.955 11.955 0 008.618 3.04M12 2.944v21.112M12 24.056c-5.891 0-10.618-4.727-10.618-10.618"></path></svg>
+                    Roles y Permisos
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">Seguridad</div>
+                <a href="auditoria.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Auditoría
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="dashboard-content">
+        <header class="header">
+            <div class="header-left"><div class="header-title"><h1>Configuración de Seguridad</h1></div></div>
+            <div class="profile-menu">
+                <div class="profile-avatar">AD</div>
+                <div class="profile-info"><p>Admin User</p><span>Super Admin</span></div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="page-header">
+                <div class="page-title">
+                    <h2>Roles y Permisos</h2>
+                    <p>Define el alcance de cada perfil en la plataforma</p>
+                </div>
+            </div>
+
+            <div class="roles-grid">
+                <!-- Columna Izquierda: Lista de Roles -->
+                <div class="roles-list-card">
+                    <div class="role-option active">
+                        <div>
+                            <span class="role-name">Super Admin</span>
+                            <span class="role-count">Acceso Total</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="role-option">
+                        <div>
+                            <span class="role-name">Director</span>
+                            <span class="role-count">Control de Escuela</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="role-option">
+                        <div>
+                            <span class="role-name">RRHH</span>
+                            <span class="role-count">Gestión de Personal</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="role-option">
+                        <div>
+                            <span class="role-name">Control Escolar</span>
+                            <span class="role-count">Académico y Alumnos</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Matriz de Permisos -->
+                <div class="permissions-card">
+                    <div class="permissions-header">
+                        <h3>Permisos para Super Admin</h3>
+                        <button class="btn-save">Actualizar Permisos</button>
+                    </div>
+
+                    <div class="permission-group">
+                        <div class="permission-group-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H5a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            Gestión de Infraestructura
+                        </div>
+                        <div class="permission-items">
+                            <div class="permission-item selected">
+                                <div class="checkbox-custom"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg></div>
+                                <div class="permission-info">
+                                    <span class="p-name">Crear Escuelas</span>
+                                    <span class="p-desc">Permite dar de alta nuevos planteles</span>
+                                </div>
+                            </div>
+                            <div class="permission-item selected">
+                                <div class="checkbox-custom"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg></div>
+                                <div class="permission-info">
+                                    <span class="p-name">Editar Escuelas</span>
+                                    <span class="p-desc">Modificar datos de instituciones</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="permission-group">
+                        <div class="permission-group-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            Seguridad y Accesos
+                        </div>
+                        <div class="permission-items">
+                            <div class="permission-item selected">
+                                <div class="checkbox-custom"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg></div>
+                                <div class="permission-info">
+                                    <span class="p-name">Gestionar Usuarios</span>
+                                    <span class="p-desc">Crear y deshabilitar cuentas</span>
+                                </div>
+                            </div>
+                            <div class="permission-item selected">
+                                <div class="checkbox-custom"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg></div>
+                                <div class="permission-info">
+                                    <span class="p-name">Ver Auditoría</span>
+                                    <span class="p-desc">Acceso total a logs de actividad</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        const rolesList = document.querySelector('.roles-list-card');
+        const permissionsHeader = document.querySelector('.permissions-header h3');
+        const permissionsContainer = document.querySelector('.permissions-card');
+        const token = localStorage.getItem('token');
+
+        let currentRoleId = null;
+
+        async function loadRoles() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/roles`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                if (!result.success) return;
+
+                const roles = result.data;
+                
+                rolesList.innerHTML = '';
+                roles.forEach((role, index) => {
+                    const div = document.createElement('div');
+                    div.className = `role-option ${index === 0 ? 'active' : ''}`;
+                    div.innerHTML = `
+                        <div>
+                            <span class="role-name">${role.nombre}</span>
+                            <span class="role-count">${role.descripcion || 'Sin descripción'}</span>
+                        </div>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    `;
+                    div.onclick = () => selectRole(role, div);
+                    rolesList.appendChild(div);
+                    if (index === 0) selectRole(role, div);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function selectRole(role, element) {
+            currentRoleId = role.id;
+            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            permissionsHeader.innerText = `Permisos para ${role.nombre}`;
+            
+            // Cargar permisos actuales del rol
+            loadRolePermissions(role.id);
+        }
+
+        async function loadRolePermissions(roleId) {
+            try {
+                // Fetch de todos los permisos y del rol específico para ver cuáles tiene
+                const [allRes, roleRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/permisos`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch(`${API_BASE_URL}/roles/${roleId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                
+                const allResult = await allRes.json();
+                const roleResult = await roleRes.json();
+
+                if (!allResult.success || !roleResult.success) return;
+
+                const allPermissions = allResult.data;
+                const roleData = roleResult.data;
+                const assignedIds = roleData.Permisos ? roleData.Permisos.map(p => p.id) : [];
+
+                // Renderizado simplificado (sin grupos por ahora para no complicar el JS)
+                const itemsContainer = document.querySelector('.permission-items');
+                itemsContainer.innerHTML = '';
+                
+                allPermissions.forEach(p => {
+                    const isSelected = assignedIds.includes(p.id);
+                    const div = document.createElement('div');
+                    div.className = `permission-item ${isSelected ? 'selected' : ''}`;
+                    div.innerHTML = `
+                        <div class="checkbox-custom"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3"></path></svg></div>
+                        <div class="permission-info">
+                            <span class="p-name">${p.nombre}</span>
+                            <span class="p-desc">${p.descripcion || ''}</span>
+                        </div>
+                    `;
+                    div.onclick = () => {
+                        div.classList.toggle('selected');
+                    };
+                    div.dataset.id = p.id;
+                    itemsContainer.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        document.querySelector('.btn-save').onclick = async () => {
+            const selectedIds = Array.from(document.querySelectorAll('.permission-item.selected'))
+                                    .map(el => parseInt(el.dataset.id));
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/roles/${currentRoleId}/permisos`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ permisos: selectedIds })
+                });
+
+                if (response.ok) {
+                    alert('Permisos actualizados correctamente');
+                } else {
+                    alert('Error al actualizar permisos');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+
+        loadRoles();
+    </script>
+</body>
+</html>
