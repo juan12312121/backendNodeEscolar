@@ -352,3 +352,34 @@ ALTER TABLE `Estadistica_Alumnos` ADD FOREIGN KEY (`id_ciclo`) REFERENCES `Ciclo
 ALTER TABLE `Estadistica_Alumnos` ADD FOREIGN KEY (`id_grupo`) REFERENCES `Grupos` (`id`);
 
 ALTER TABLE `Padron` ADD FOREIGN KEY (`id_ciclo`) REFERENCES `Ciclo` (`id`);
+
+CREATE TABLE `Roles` (
+  `id` uuid PRIMARY KEY,
+  `nombre` varchar(50) UNIQUE,
+  `descripcion` text,
+  `activo` boolean DEFAULT true,
+  `f_cre` timestamp DEFAULT (now()),
+  `f_mod` timestamp
+);
+
+CREATE TABLE `Permisos` (
+  `id` uuid PRIMARY KEY,
+  `nombre` varchar(100) UNIQUE,
+  `slug` varchar(100) UNIQUE,
+  `descripcion` text,
+  `activo` boolean DEFAULT true,
+  `f_cre` timestamp DEFAULT (now()),
+  `f_mod` timestamp
+);
+
+CREATE TABLE `Rol_Permiso` (
+  `id` uuid PRIMARY KEY,
+  `id_rol` uuid,
+  `id_permiso` uuid
+);
+
+ALTER TABLE `Usuarios` ADD COLUMN `id_rol` uuid;
+ALTER TABLE `Usuarios` ADD FOREIGN KEY (`id_rol`) REFERENCES `Roles` (`id`);
+ALTER TABLE `Rol_Permiso` ADD FOREIGN KEY (`id_rol`) REFERENCES `Roles` (`id`);
+ALTER TABLE `Rol_Permiso` ADD FOREIGN KEY (`id_permiso`) REFERENCES `Permisos` (`id`);
+
